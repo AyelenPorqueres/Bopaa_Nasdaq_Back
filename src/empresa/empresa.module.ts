@@ -10,5 +10,6 @@ import { GempresaService } from 'src/services/gempresas.service';
   imports: [TypeOrmModule.forFeature([Empresa, Cotizacion])],
   controllers: [EmpresaController],
   providers: [EmpresaService,GempresaService],
+  exports: [EmpresaService],
 })
 export class EmpresaModule {}

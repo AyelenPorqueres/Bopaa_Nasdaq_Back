@@ -33,7 +33,7 @@ public codigoIndice:string;
 @Column({
     name: 'valorIndice',
     type: 'decimal',
-    precision: 7,
+    precision: 15,
     scale: 2,
 })
 public valorIndice: number;
