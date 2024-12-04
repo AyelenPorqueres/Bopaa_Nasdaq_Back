@@ -1,5 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Cotizacion } from './cotizacion.entity';
+
+//Creacion de los entitys de la empresa.
 @Entity('empresas')
 export class Empresa {
   @PrimaryGeneratedColumn({

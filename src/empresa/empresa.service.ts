@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Empresa } from './entities/empresa.entity';
-import { Between, FindManyOptions, Not, Repository,  } from 'typeorm';
+import { Between, FindManyOptions, Not, Repository, } from 'typeorm';
 import { Cotizacion } from './entities/cotizacion.entity';
 import * as momentTZ from "moment-timezone";
 import { GempresaService } from 'src/services/gempresas.service';
@@ -15,25 +15,25 @@ export class EmpresaService {
   constructor(
     @InjectRepository(Empresa)
     private readonly empresaRepository: Repository<Empresa>,
-    @InjectRepository (Cotizacion)
+    @InjectRepository(Cotizacion)
     private readonly cotizacionRepository: Repository<Cotizacion>,
     private readonly gempresaService: GempresaService
   ) { }
-  
+
   async getAllEmpresas(): Promise<Empresa[]> {
-   
+
     return await this.empresaRepository.find();
   }
-  
-  async getUltimaCotizacion (codigoEmpresa: string): Promise<Cotizacion> {
-    const criterio: FindManyOptions<Cotizacion> = { 
-      where: {empresa : {codEmpresa : codigoEmpresa}},
+
+  async getUltimaCotizacion(codigoEmpresa: string): Promise<Cotizacion> {
+    const criterio: FindManyOptions<Cotizacion> = {
+      where: { empresa: { codEmpresa: codigoEmpresa } },
       order: {
-          dateUTC: "DESC",
-          hora: "DESC"
+        dateUTC: "DESC",
+        hora: "DESC"
       },
       take: 1,
-   };
+    };
 
     const ultCotizacion = await this.cotizacionRepository.find(criterio);
     return ultCotizacion[0];
@@ -59,17 +59,17 @@ export class EmpresaService {
     empresas.forEach(async empresa => {
       //Busco la ultima cotizacion guardada de la empresa
       const ultimaCot: Cotizacion = await this.getUltimaCotizacion(empresa.codEmpresa);
-      
+
 
       let fechaDesde = '';
       if (!ultimaCot) {
         fechaDesde = '2024-01-01T01:00:00.000Z';
       } else {
-        fechaDesde = ultimaCot.fecha+'T'+ultimaCot.hora
+        fechaDesde = ultimaCot.fecha + 'T' + ultimaCot.hora
       }
 
-      //La fecha desde será la fecha y hora de la ult cotizacion convertida a UTC mas una hora (en este caso vuelve a quedar la misma fecha desde porq Amsterdam es UTC+1)
-      fechaDesde = momentTZ.tz(fechaDesde,"America/New_York").utc().add(1,'hour').toISOString().substring(0,16);
+      //La fecha desde será la fecha y hora de la ult cotizacion convertida a UTC mas una hora 
+      fechaDesde = momentTZ.tz(fechaDesde, "America/New_York").utc().add(1, 'hour').toISOString().substring(0, 16);
 
       //Fecha Hasta es este momento
       const fechaHasta = (new Date()).toISOString().substring(0, 16);
@@ -77,26 +77,26 @@ export class EmpresaService {
       //Busco las cotizaciones faltantes
       const cotizaciones: Cotizacion[] = await this.gempresaService.getCotizaciones(empresa.codEmpresa, fechaDesde, fechaHasta);
 
-      //Tengo que chequear que esten dentro de los rangos que me interesan (Lu a Vi de 9 a 15hs (hora de amsterdam))
-      //O sea de 8 a 14 hora UTC
+      //Confirmo que esten dentro de los rangos que me interesan (Lu a Vi de 9 a 15hs (hora de Nueva York))
+
       const cotizacionesValidas = cotizaciones.filter((cot) => {
         let validoDia = true;
         let validoHora = true;
-        const horaAperturaUTC = momentTZ.tz(cot.fecha + ' ' + "09:00","America/New_York").utc().format('HH:mm');
-        const horaCierreUTC = momentTZ.tz(cot.fecha + ' ' + "15:00","America/New_York").utc().format('HH:mm');
-        
+        const horaAperturaUTC = momentTZ.tz(cot.fecha + ' ' + "09:00", "America/New_York").utc().format('HH:mm');
+        const horaCierreUTC = momentTZ.tz(cot.fecha + ' ' + "15:00", "America/New_York").utc().format('HH:mm');
+
         const dia = (DateUtils.getFechaFromRegistroFecha({ fecha: cot.fecha, hora: cot.hora })).getDay();
 
         if (dia == 0 || dia == 6) {
           validoDia = false;
         }
-        if (cot.hora < horaAperturaUTC|| cot.hora > horaCierreUTC) {
+        if (cot.hora < horaAperturaUTC || cot.hora > horaCierreUTC) {
           validoHora = false;
         }
         return validoDia && validoHora;
       })
 
-      
+
       //Las inserto en la tabla cotizaciones con la hora de nueva york
       cotizacionesValidas.forEach(async cotizacion => {
         const fechaNuevaYork = momentTZ.utc(cotizacion.fecha + ' ' + cotizacion.hora).tz("America/New_York");
@@ -146,7 +146,7 @@ export class EmpresaService {
     return cotizaciones;
   }
 
-  
+
   /**
    * Función que obtiene las cotizaciones de una empresa en un rango de fechas y horas dados
    * @param codigoEmpresa 
@@ -214,34 +214,34 @@ export class EmpresaService {
   /**
    * Funcion que calcula la participacion de cada empresa en la bolsa
    */
-  async participacionEmpresas(){
+  async participacionEmpresas() {
     const empresas: Empresa[] = await this.getAllEmpresas();
 
-    const empresasConValor = await Promise.all(empresas.map (async empresa => {
+    const empresasConValor = await Promise.all(empresas.map(async empresa => {
       const ultCotizacion = await this.getUltimaCotizacion(empresa.codEmpresa);
 
-      const valorEmpresa = empresa.cantidadAcciones*ultCotizacion.cotization;
+      const valorEmpresa = empresa.cantidadAcciones * ultCotizacion.cotization;
 
       return {
         ...empresa,
         valorEmpresa: valorEmpresa,
       }
     }))
-    
+
     let valorTotal = 0;
     empresasConValor.map(empresa => {
-       valorTotal += empresa.valorEmpresa
+      valorTotal += empresa.valorEmpresa
     })
 
     const participacionEmpresas = empresasConValor.map(empresa => {
       return {
         ...empresa,
-        participacionMercado: (empresa.valorEmpresa/valorTotal*100).toFixed(2),
+        participacionMercado: (empresa.valorEmpresa / valorTotal * 100).toFixed(2),
       }
     })
     console.log("participacionempresas", participacionEmpresas)
     return participacionEmpresas;
-   
+
   }
 }
 

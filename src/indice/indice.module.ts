@@ -12,4 +12,4 @@ import { GempresaService } from 'src/services/gempresas.service';
   providers: [IndiceService, GempresaService],
   exports: [IndiceService],
 })
-export class IndiceModule {}
+export class IndiceModule { }

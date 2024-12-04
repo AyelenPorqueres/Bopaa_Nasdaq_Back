@@ -8,13 +8,11 @@ export class GenDataService {
     private logger: Logger = new Logger(GenDataService.name);
 
     constructor(
-        private empresaService: EmpresaService, 
+        private empresaService: EmpresaService,
         private indiceService: IndiceService) {
         this.logger.log('Servicio Gen Data Inicializado');
     }
 
-    //Establezco tarea programada que se ejecutara, cada una hora, en el minuto 5 de lunes a viernes de 9 a 15 hs. (el visual toma hora UTC?)
-    //@Cron('0 5 9-15 * * 1-5')
     @Cron('0 29 * * * *')
     obtenerDatos() {
         this.logger.log('Obtener datos empresas iniciado');

@@ -20,15 +20,12 @@ export class IndiceService {
     private readonly cotizacionRepository: Repository<Cotizacion>,
     private readonly gempresaService: GempresaService
   ) { }
-  
-  
+
+
   async getAllIndices(): Promise<Indice[]> {
-   
+
     return await this.indiceRepository.find();
   }
-
-
-
 
 
   //Calcula el indice Nasdaq para los dias y horas faltantes
@@ -36,7 +33,7 @@ export class IndiceService {
     try {
       //Busco el ultimo indice guardado
       const ultIndice: Indice[] = await this.indiceRepository.find({
-        where: { codigoIndice: 'NDX' } ,
+        where: { codigoIndice: 'NDX' },
         order: {
           fecha: "DESC",
           hora: "DESC"
@@ -53,7 +50,7 @@ export class IndiceService {
       const sql: string = `select 'NDX' codigoIndice,avg(c.cotization)as valorIndice,c.fecha ,c.hora from cotizaciones c  where fecha >= '${fechaUltIndice}' group by c.fecha , c.hora order by c.fecha,c.hora`
 
       const indices: Indice[] = await this.cotizacionRepository.query(sql);
-     
+
       if (!indices) {
         throw new HttpException(
           'No existen cotizaciones para calcular indices',
@@ -63,9 +60,8 @@ export class IndiceService {
 
       //Inserto los indices en la tabla y lo envio a Gempresa
       indices.forEach(async (indice: Indice) => {
-        /*this.logger.error("indice", indice)*/
-       
-       
+
+
         if (indice.fecha == fechaUltIndice && indice.hora > ultIndice[0].hora) {
 
           await this.indiceRepository.save(indice);
@@ -98,15 +94,13 @@ export class IndiceService {
   }
 
 
-  /**
-   *Obtengo de Gempresa los indices de las demas bolsas y los guardo en mi base de datos
-   */
+  //Obtengo de Gempresa los indices de las demas bolsas y los guardo en mi base de datos
   async obtenerIndices() {
     try {
-      //Busco todas los indices
+
       const indices: IIndice[] = await this.gempresaService.getIndices();
       console.log(indices)
-      //Ls recorro para buscar las cotizaciones faltantes
+      //Los recorro para buscar las cotizaciones faltantes
       indices.forEach(async indice => {
         if (indice.code != 'NDX') {
           //Busco la ultima cotizacion guardada de la empresa
@@ -126,20 +120,20 @@ export class IndiceService {
           //Busco las cotizaciones faltantes
           const cotizaciones = await this.gempresaService.getCotizacionesIndices(indice.code, fechaDesde, fechaHasta);
 
-          //Chequeo que las cotizaciones sean de dias habiles y de los horarios en que esta la bolsa abierta
-          if(cotizaciones) {
+          //Confirmo que las cotizaciones sean de dias habiles y de los horarios en que esta la bolsa abierta
+          if (cotizaciones) {
             const cotizacionesValidas = cotizaciones.filter((cot) => {
               let validoDia = true;
               let validoHora = true;
               const horaApertura = "09:00";
               const horaCierre = "15:00";
-              
+
               const dia = (DateUtils.getFechaFromRegistroFecha({ fecha: cot.fecha, hora: cot.hora })).getDay();
-      
+
               if (dia == 0 || dia == 6) {
                 validoDia = false;
               }
-              if (cot.hora < horaApertura|| cot.hora > horaCierre) {
+              if (cot.hora < horaApertura || cot.hora > horaCierre) {
                 validoHora = false;
               }
               return validoDia && validoHora;
@@ -152,7 +146,7 @@ export class IndiceService {
                   codigoIndice: cotizacion.code,
                   valorIndice: cotizacion.valor,
                   fecha: cotizacion.fecha,
-                  hora: cotizacion.hora.substring(0,5),
+                  hora: cotizacion.hora.substring(0, 5),
                   id: null
                 });
               })
@@ -165,7 +159,7 @@ export class IndiceService {
     }
   }
   /**
-   * Funcion que obtiene las cotizaciones de un indice en un rango de fechas establecido
+   * Realizo una funcion que obtiene las cotizaciones de un indice en un rango de fechas establecido
    * @param codigoIndice 
    * @param fechaDesde 
    * @param fechaHasta 
@@ -223,7 +217,7 @@ export class IndiceService {
 
     let codIndices: IIndice[] = [];
 
-    if (criterio.allIndices == "1"){
+    if (criterio.allIndices == "1") {
       codIndices = await this.gempresaService.getIndices();
     } else {
       codIndices.push({ code: 'NDX', name: 'Nasdaq' });

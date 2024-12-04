@@ -4,7 +4,7 @@ import { Indice } from "./entities/indice.entity";
 
 @Controller('indices')
 export class IndiceController {
-  constructor(private readonly indiceService: IndiceService) {}
+  constructor(private readonly indiceService: IndiceService) { }
 
   @Get('/getIndices')
   async getAllIndices(): Promise<Indice[]> {
@@ -16,6 +16,6 @@ export class IndiceController {
     @Query('dias') dias: number,
     @Query('allIndices') allIndices: string,
   ): Promise<Indice[][]> {
-     return await this.indiceService.getDatosGrafico({dias: dias, allIndices: allIndices});
+    return await this.indiceService.getDatosGrafico({ dias: dias, allIndices: allIndices });
   }
 }

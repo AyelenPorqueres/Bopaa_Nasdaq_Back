@@ -1,12 +1,13 @@
 import {
-    Column,
-    Entity,
-    JoinColumn,
-    ManyToOne,
-    PrimaryGeneratedColumn,
-  } from 'typeorm';
-  import { Empresa } from './empresa.entity';
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Empresa } from './empresa.entity';
 
+//Creacion de las entitys de cotizaciones y su contructor.
 @Entity('cotizaciones')
 export class Cotizacion {
   @PrimaryGeneratedColumn({
@@ -44,7 +45,7 @@ export class Cotizacion {
   @ManyToOne(() => Empresa, (empresa) => empresa.cotizaciones)
   public empresa: Empresa;
 
-  constructor(fecha:string, hora: string, dateUTC: string, cotizacion:number) {
+  constructor (fecha: string, hora: string, dateUTC: string, cotizacion: number) {
     this.fecha = fecha;
     this.hora = hora;
     this.dateUTC = dateUTC;
