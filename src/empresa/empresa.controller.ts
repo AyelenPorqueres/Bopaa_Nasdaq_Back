@@ -42,4 +42,10 @@ export class EmpresaController {
    return await this.empresaService.obtenerDatosEmpresas();
  }
   
+ @Get('/participacionEmpresas')
+ async getParticipacionEmpresas(): Promise<any[]> {
+   return await this.empresaService.participacionEmpresas();
+ }
+
+
 }

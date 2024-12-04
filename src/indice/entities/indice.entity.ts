@@ -38,5 +38,11 @@ public codigoIndice:string;
 })
 public valorIndice: number;
 
+constructor(codigoIndice: string, valor:number, fecha: string, hora:string) {
+    this.codigoIndice = codigoIndice;
+    this.valorIndice = valor;
+    this.fecha = fecha;
+    this.hora = hora;
+  }
 
 }

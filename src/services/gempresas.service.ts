@@ -39,6 +39,8 @@ export class GempresaService{
   async postIndice(indice: Indice){
       try {
           const respuesta: AxiosResponse<any, any> = await this.clientAxios.post(`/indices/cotizaciones`,indice);
+          console.log("respuesta", respuesta)
+          console.log("respuesta.data",respuesta.data)
           return respuesta.data;
       } catch (error:any) {
           this.logger.error(error.response.data.status + ' ' + error.response.data.error);

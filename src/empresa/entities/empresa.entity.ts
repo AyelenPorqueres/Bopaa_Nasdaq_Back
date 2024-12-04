@@ -1,5 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Cotizacion } from './cotizacion.entity';
 @Entity('empresas')
 export class Empresa {
   @PrimaryGeneratedColumn({
@@ -32,6 +32,10 @@ export class Empresa {
     type: 'bigint',
   })
   public cantidadAcciones: number;
+
+  @OneToMany(() => Cotizacion, (cotizacion) => cotizacion.empresa)
+  public cotizaciones: Cotizacion[];
+
 
   constructor(codempresa: string, empresaNombre: string) {
     this.codEmpresa = codempresa;

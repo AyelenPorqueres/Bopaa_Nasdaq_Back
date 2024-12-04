@@ -41,12 +41,15 @@ export class Cotizacion {
   })
   public cotization: number;
 
-  @ManyToOne(() => Empresa)
-  @JoinColumn({
-    name: 'idEmpresa',
-    referencedColumnName: 'id',
-  })
-  empresa: Empresa;
+  @ManyToOne(() => Empresa, (empresa) => empresa.cotizaciones)
+  public empresa: Empresa;
 
-  constructor() {}
+  constructor(fecha:string, hora: string, dateUTC: string, cotizacion:number) {
+    this.fecha = fecha;
+    this.hora = hora;
+    this.dateUTC = dateUTC;
+    this.cotization = cotizacion;
+  }
+
+
 }

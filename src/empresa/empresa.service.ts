@@ -126,7 +126,7 @@ export class EmpresaService {
 
       //Busco la cotizacion de cierre anterior
       const criterio: FindManyOptions<Cotizacion> = {
-        where: { empresa: { codEmpresa: empresa.codEmpresa }, hora: "15:00", fecha: Not(ultimaCot[0].fecha) },
+        where: { empresa: { codEmpresa: empresa.codEmpresa }, hora: "15:00", fecha: Not(ultimaCot.fecha) },
         order: {
           fecha: "DESC"
         },
@@ -134,11 +134,11 @@ export class EmpresaService {
       };
       const cotAnterior = await this.cotizacionRepository.find(criterio);
 
-      const variacion = Number(((ultimaCot[0].cotization - cotAnterior[0].cotization) / cotAnterior[0].cotization * 100).toFixed(2));
+      const variacion = Number(((ultimaCot.cotization - cotAnterior[0].cotization) / cotAnterior[0].cotization * 100).toFixed(2));
       return ({
         codEmpresa: empresa.codEmpresa,
         empresaNombre: empresa.empresaNombre,
-        ultimaCot: ultimaCot[0].cotization,
+        ultimaCot: ultimaCot.cotization,
         variacion: variacion
       });
     })
@@ -210,6 +210,38 @@ export class EmpresaService {
     const cotizaciones = await this.getCotizacionesByFecha(codEmpresa, fechaDesde, fechaHasta);
     const datos = await Promise.all(cotizaciones);
     return datos;
+  }
+  /**
+   * Funcion que calcula la participacion de cada empresa en la bolsa
+   */
+  async participacionEmpresas(){
+    const empresas: Empresa[] = await this.getAllEmpresas();
+
+    const empresasConValor = await Promise.all(empresas.map (async empresa => {
+      const ultCotizacion = await this.getUltimaCotizacion(empresa.codEmpresa);
+
+      const valorEmpresa = empresa.cantidadAcciones*ultCotizacion.cotization;
+
+      return {
+        ...empresa,
+        valorEmpresa: valorEmpresa,
+      }
+    }))
+    
+    let valorTotal = 0;
+    empresasConValor.map(empresa => {
+       valorTotal += empresa.valorEmpresa
+    })
+
+    const participacionEmpresas = empresasConValor.map(empresa => {
+      return {
+        ...empresa,
+        participacionMercado: (empresa.valorEmpresa/valorTotal*100).toFixed(2),
+      }
+    })
+    console.log("participacionempresas", participacionEmpresas)
+    return participacionEmpresas;
+   
   }
 }
 

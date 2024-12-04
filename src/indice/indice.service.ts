@@ -20,19 +20,29 @@ export class IndiceService {
     private readonly cotizacionRepository: Repository<Cotizacion>,
     private readonly gempresaService: GempresaService
   ) { }
+  
+  
+  async getAllIndices(): Promise<Indice[]> {
+   
+    return await this.indiceRepository.find();
+  }
 
-  //Calcula el indice Euronext para los dias y horas faltantes
+
+
+
+
+  //Calcula el indice Nasdaq para los dias y horas faltantes
   async calcularIndices() {
     try {
       //Busco el ultimo indice guardado
       const ultIndice: Indice[] = await this.indiceRepository.find({
+        where: { codigoIndice: 'NDX' } ,
         order: {
           fecha: "DESC",
           hora: "DESC"
         },
         take: 1
       });
-
       let fechaUltIndice = '2023-12-31';
       //Si existen indices calculados, tomo la fecha y hora del ultimo
       if (ultIndice.length != 0) {
@@ -43,7 +53,7 @@ export class IndiceService {
       const sql: string = `select 'NDX' codigoIndice,avg(c.cotization)as valorIndice,c.fecha ,c.hora from cotizaciones c  where fecha >= '${fechaUltIndice}' group by c.fecha , c.hora order by c.fecha,c.hora`
 
       const indices: Indice[] = await this.cotizacionRepository.query(sql);
-
+     
       if (!indices) {
         throw new HttpException(
           'No existen cotizaciones para calcular indices',
@@ -53,11 +63,17 @@ export class IndiceService {
 
       //Inserto los indices en la tabla y lo envio a Gempresa
       indices.forEach(async (indice: Indice) => {
+        /*this.logger.error("indice", indice)*/
+       
+       
         if (indice.fecha == fechaUltIndice && indice.hora > ultIndice[0].hora) {
+
           await this.indiceRepository.save(indice);
           await this.gempresaService.postIndice(indice);
         } else if (indice.fecha != fechaUltIndice) {
           await this.indiceRepository.save(indice);
+          this.logger.debug("indice", indice);
+
           await this.gempresaService.postIndice(indice);
         }
       })
@@ -95,7 +111,7 @@ export class IndiceService {
         if (indice.code != 'NDX') {
           //Busco la ultima cotizacion guardada de la empresa
           let ultimaCot: Indice = await this.getUltimoValorIndice(indice.code);
-
+          console.log(ultimaCot);
           let fechaDesde = ''
           if (!ultimaCot) {
             fechaDesde = '2024-01-01T00:00';
@@ -106,7 +122,7 @@ export class IndiceService {
 
           //Fecha Hasta es este momento
           const fechaHasta = (new Date()).toISOString().substring(0, 16);
-
+          console.log(fechaDesde, fechaHasta);
           //Busco las cotizaciones faltantes
           const cotizaciones = await this.gempresaService.getCotizacionesIndices(indice.code, fechaDesde, fechaHasta);
 
@@ -115,8 +131,8 @@ export class IndiceService {
             const cotizacionesValidas = cotizaciones.filter((cot) => {
               let validoDia = true;
               let validoHora = true;
-              const horaApertura = process.env.HORA_APERTURA
-              const horaCierre = process.env.HORA_CIERRE
+              const horaApertura = "09:00";
+              const horaCierre = "15:00";
               
               const dia = (DateUtils.getFechaFromRegistroFecha({ fecha: cot.fecha, hora: cot.hora })).getDay();
       
@@ -201,19 +217,19 @@ export class IndiceService {
    * @param criterio 
    * @returns 
    */
-  async getDatosGrafico(criterio: { dias: number, allIndices: number }) {
+  async getDatosGrafico(criterio: { dias: number, allIndices: string }) {
     const fechaDesde = momentTZ.tz(new Date(), "America/New_York").add(-criterio.dias, 'days').toISOString().substring(0, 16);
     const fechaHasta = momentTZ.tz(new Date(), "America/New_York").toISOString().substring(0, 16);
 
     let codIndices: IIndice[] = [];
 
-    if (criterio.allIndices == 1) {
+    if (criterio.allIndices == "1"){
       codIndices = await this.gempresaService.getIndices();
     } else {
       codIndices.push({ code: 'NDX', name: 'Nasdaq' });
     }
-
-    const cotizaciones = codIndices.map(async indice => {
+    const indices = codIndices.filter(indice => indice.code);
+    const cotizaciones = indices.map(async indice => {
       return await this.getIndicesbyFecha(indice.code, fechaDesde, fechaHasta);
     });
     const datos = await Promise.all(cotizaciones);
