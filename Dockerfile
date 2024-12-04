@@ -14,4 +14,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:prod","./wait-for-it.sh", "mysql:3306", "--", "npm", "start"]

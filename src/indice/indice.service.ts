@@ -3,7 +3,7 @@ import { Indice } from "./entities/indice.entity";
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { Between, FindManyOptions, FindOptionsWhere, Repository } from "typeorm";
 import { Cotizacion } from "src/empresa/entities/cotizacion.entity";
-import { IIndice } from "./model/IIndice";
+import { IIndice } from "./model/iIndice";
 import DateUtils from "src/utils/dateUtils";
 import * as momentTZ from 'moment-timezone';
 import { GempresaService } from "src/services/gempresas.service";

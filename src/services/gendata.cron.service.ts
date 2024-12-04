@@ -13,20 +13,20 @@ export class GenDataService {
         this.logger.log('Servicio Gen Data Inicializado');
     }
 
-    @Cron('0 29 * * * *')
-    obtenerDatos() {
+    @Cron('* 35 * * * *')
+     async obtenerDatos() {
         this.logger.log('Obtener datos empresas iniciado');
         this.empresaService.obtenerDatosEmpresas();
     }
 
-    @Cron('0 30 * * * *')
-    crearIndice() {
+    @Cron('* 37 * * * *')
+     async crearIndice() {
         this.logger.log('Generar Indice iniciado');
         this.indiceService.calcularIndices();
     }
 
-    @Cron('0 15 * * * *')
-    obtenerIndices() {
+    @Cron('* 39 * * * *')
+     async obtenerIndices() {
         this.logger.log('Traer indices iniciado');
         this.indiceService.obtenerIndices();
     }
